@@ -22,13 +22,17 @@ function normalize(value) {
 export function parseTypecheck(output) {
   return normalize(output)
     .split("\n")
-    .filter((line) => /^(?:<root>\/)?[^\s].*\(\d+,\d+\): error TS\d+:/.test(line));
+    .filter((line) => /^(?:<root>\/)?[^\s].*\(\d+,\d+\): error TS\d+:/.test(line))
+    .map((line) => line.replace(/\(\d+,\d+\)(?=: error TS\d+:)/, ""));
 }
 
 export function parseBiome(output) {
   return normalize(output)
     .split("\n")
-    .filter((line) => /^::(?:error|warning|notice) /.test(line));
+    .filter((line) => /^::(?:error|warning|notice) /.test(line))
+    .map((line) =>
+      line.replace(/,(?:line|endLine|col|endColumn)=\d+/g, ""),
+    );
 }
 
 export function parseAudit(output) {
@@ -40,16 +44,22 @@ export function parseAudit(output) {
 
 export function compareFingerprints(name, currentValues, baselineHashes) {
   const valuesByHash = new Map(currentValues.map((value) => [fingerprint(value), value]));
-  const currentHashes = [...valuesByHash.keys()].sort();
-  const accepted = new Set(baselineHashes);
-  const added = currentHashes.filter((hash) => !accepted.has(hash));
+  const currentHashes = currentValues.map(fingerprint).sort();
+  const available = new Map();
+  for (const hash of baselineHashes) available.set(hash, (available.get(hash) ?? 0) + 1);
+  const added = [];
+  for (const hash of currentHashes) {
+    const remaining = available.get(hash) ?? 0;
+    if (remaining > 0) available.set(hash, remaining - 1);
+    else added.push(hash);
+  }
   return {
     name,
     currentHashes,
     baselineCount: baselineHashes.length,
     added,
     addedValues: added.map((hash) => valuesByHash.get(hash)),
-    removedCount: baselineHashes.filter((hash) => !currentHashes.includes(hash)).length,
+    removedCount: [...available.values()].reduce((total, count) => total + count, 0),
   };
 }
 
@@ -96,7 +106,7 @@ function capture() {
     diagnostics: Object.fromEntries(
       Object.entries(values).map(([name, diagnostics]) => [
         name,
-        [...new Set(diagnostics.map(fingerprint))].sort(),
+        diagnostics.map(fingerprint).sort(),
       ]),
     ),
   };

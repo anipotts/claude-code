@@ -4,7 +4,7 @@
 current `main` baseline. These are known debt, not successful checks:
 
 - TypeScript diagnostics: 4,781
-- Biome diagnostics: 13,319
+- Biome diagnostics: 13,360
 - dependency advisories: 86
 
 `bun run ci:debt-ratchet` reruns all three tools. Removing a recorded finding

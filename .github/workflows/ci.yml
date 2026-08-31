@@ -47,7 +47,7 @@ jobs:
 
       - name: Check pushed diff
         if: github.event_name == 'push'
-        run: git diff --check HEAD^ HEAD
+        run: git diff --check "${{ github.event.before }}..${{ github.sha }}"
 
       - name: Scan pull-request commits for secrets
         if: github.event_name == 'pull_request'
