@@ -70,7 +70,22 @@ function run(command, args) {
     maxBuffer: 64 * 1024 * 1024,
   });
   if (result.error) throw result.error;
-  return { stdout: result.stdout, stderr: result.stderr, status: result.status };
+  return {
+    stdout: result.stdout,
+    stderr: result.stderr,
+    status: result.status,
+    signal: result.signal,
+  };
+}
+
+export function assertAnalyzerResult(name, result, diagnosticCount, allowedStatuses) {
+  if (result.signal) throw new Error(`${name} terminated by signal ${result.signal}`);
+  if (result.status === null || !allowedStatuses.includes(result.status)) {
+    throw new Error(`${name} exited with unexpected status ${result.status}`);
+  }
+  if (result.status !== 0 && diagnosticCount === 0) {
+    throw new Error(`${name} failed without parseable diagnostics`);
+  }
 }
 
 function collect() {
@@ -89,11 +104,9 @@ function collect() {
     audit: parseAudit(audit.stdout),
   };
 
-  for (const [name, diagnostics] of Object.entries(values)) {
-    if (diagnostics.length === 0) {
-      throw new Error(`${name} unexpectedly produced no baseline diagnostics`);
-    }
-  }
+  assertAnalyzerResult("typecheck", typecheck, values.typecheck.length, [0, 2]);
+  assertAnalyzerResult("biome", biome, values.biome.length, [0, 1]);
+  assertAnalyzerResult("audit", audit, values.audit.length, [0, 1]);
   return values;
 }
 

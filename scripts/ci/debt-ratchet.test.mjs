@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
+  assertAnalyzerResult,
   compareFingerprints,
   fingerprint,
   parseAudit,
@@ -71,5 +72,26 @@ test("push diff check covers the complete event range", () => {
   assert.match(
     workflow,
     /git diff --check "\$\{\{ github\.event\.before \}\}\.\.\$\{\{ github\.sha \}\}"/,
+  );
+});
+
+test("allows a clean analyzer result", () => {
+  assert.doesNotThrow(() =>
+    assertAnalyzerResult("clean", { status: 0, signal: null }, 0, [0, 1]),
+  );
+});
+
+test("rejects analyzer crashes and truncated failures", () => {
+  assert.throws(
+    () => assertAnalyzerResult("crashed", { status: null, signal: "SIGKILL" }, 5, [0, 1]),
+    /terminated by signal/,
+  );
+  assert.throws(
+    () => assertAnalyzerResult("truncated", { status: 1, signal: null }, 0, [0, 1]),
+    /without parseable diagnostics/,
+  );
+  assert.throws(
+    () => assertAnalyzerResult("unexpected", { status: 3, signal: null }, 5, [0, 1]),
+    /unexpected status/,
   );
 });
