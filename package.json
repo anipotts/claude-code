@@ -16,6 +16,9 @@
     "build:web": "bun scripts/build-web.ts",
     "build:web:watch": "bun scripts/build-web.ts --watch",
     "build:web:prod": "bun scripts/build-web.ts --minify",
+    "ci:debt-ratchet": "node scripts/ci/debt-ratchet.mjs check",
+    "ci:path-collisions": "node scripts/ci/path-collisions.mjs",
+    "test:ci": "node --test scripts/ci/*.test.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "biome check src/",
     "lint:fix": "biome check --write src/",
@@ -85,7 +88,8 @@
     "@types/stack-utils": "^2.0.3",
     "@types/ws": "^8.5.0",
     "esbuild": "^0.25.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "unicode-case-folding": "1.1.1"
   },
   "engines": {
     "bun": ">=1.1.0"
