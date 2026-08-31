@@ -1,7 +1,7 @@
 {
   "version": 1,
   "note": "Known inherited debt. Entries are diagnostic fingerprints, not passing results.",
-  "generatedFrom": "3a854557e01eeda1009329d608cdbeb1deb7c45d",
+  "generatedFrom": "98c226ef1f32ba6abb83fe927e653128ae6c5eac",
   "diagnostics": {
     "typecheck": [
       "001cb570f042a92a891903e8922507c8a4fe0390d8a3f4215b55896344c85793",
