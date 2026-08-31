@@ -28,18 +28,13 @@ jobs:
         run: bun run build:web
 
       - name: Test inherited-debt ratchet
-        run: bun run test:debt-ratchet
+        run: bun run test:ci
 
       - name: Reject new lint, type, or audit debt
         run: bun run ci:debt-ratchet
 
       - name: Reject case-colliding tracked paths
-        run: |
-          duplicates="$(git ls-files | tr '[:upper:]' '[:lower:]' | sort | uniq -d)"
-          if [[ -n "$duplicates" ]]; then
-            printf 'case-colliding tracked paths:\n%s\n' "$duplicates"
-            exit 1
-          fi
+        run: bun run ci:path-collisions
 
       - name: Check pull-request diff
         if: github.event_name == 'pull_request'
