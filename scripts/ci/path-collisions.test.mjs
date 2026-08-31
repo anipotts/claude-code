@@ -13,6 +13,11 @@ test("folds composed and decomposed Unicode paths", () => {
   assert.equal(foldPath("café.tsx"), foldPath("cafe\u0301.tsx"));
 });
 
+test("does not conflate dotless i with ASCII i", () => {
+  assert.notEqual(foldPath("ı.tsx"), foldPath("i.tsx"));
+  assert.deepEqual(findPathCollisions(["ı.tsx", "i.tsx"]), []);
+});
+
 test("reports colliding pairs without flagging distinct paths", () => {
   assert.deepEqual(findPathCollisions(["A.tsx", "a.tsx", "other.tsx"]), [
     ["A.tsx", "a.tsx"],

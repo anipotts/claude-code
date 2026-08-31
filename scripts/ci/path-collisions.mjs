@@ -2,11 +2,12 @@
 
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
+import { caseFold } from "unicode-case-folding";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 
 export function foldPath(path) {
-  return path.normalize("NFD").toUpperCase().toLowerCase().normalize("NFD");
+  return caseFold(path.normalize("NFD")).normalize("NFD");
 }
 
 export function findPathCollisions(paths) {
