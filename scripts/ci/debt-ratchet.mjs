@@ -22,7 +22,11 @@ function normalize(value) {
 export function parseTypecheck(output) {
   return normalize(output)
     .split("\n")
-    .filter((line) => /^(?:<root>\/)?[^\s].*\(\d+,\d+\): error TS\d+:/.test(line))
+    .filter(
+      (line) =>
+        /^(?:<root>\/)?[^\s].*\(\d+,\d+\): error TS\d+:/.test(line) ||
+        /^error TS\d+:/.test(line),
+    )
     .map((line) => line.replace(/\(\d+,\d+\)(?=: error TS\d+:)/, ""));
 }
 
@@ -112,10 +116,15 @@ function collect() {
 
 function capture() {
   const values = collect();
+  const revision = run("git", ["rev-parse", "HEAD"]);
+  assertAnalyzerResult("git rev-parse", revision, 1, [0]);
+  if (!/^[0-9a-f]{40}\n?$/.test(revision.stdout)) {
+    throw new Error("git rev-parse returned an invalid revision");
+  }
   const baseline = {
     version: 1,
     note: "Known inherited debt. Entries are diagnostic fingerprints, not passing results.",
-    generatedFrom: "3a854557e01eeda1009329d608cdbeb1deb7c45d",
+    generatedFrom: revision.stdout.trim(),
     diagnostics: Object.fromEntries(
       Object.entries(values).map(([name, diagnostics]) => [
         name,

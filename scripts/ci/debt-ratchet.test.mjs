@@ -37,6 +37,13 @@ test("diagnostic identity ignores volatile source positions", () => {
   assert.deepEqual(biomeBefore, biomeAfter);
 });
 
+test("parses locationless TypeScript diagnostics", () => {
+  assert.deepEqual(
+    parseTypecheck("error TS2688: Cannot find type definition file for 'new-types'."),
+    ["error TS2688: Cannot find type definition file for 'new-types'."],
+  );
+});
+
 test("parses compact Biome diagnostics", () => {
   const output = [
     "::error title=format,file=src/a.ts,line=1::format issue",
