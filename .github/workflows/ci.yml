@@ -1,4 +1,4 @@
-name: CI
+name: Verify
 
 on:
   push:
@@ -7,11 +7,15 @@ on:
     branches: [main]
 
 jobs:
-  check:
-    name: Typecheck & Lint
+  verify:
+    name: verify
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -20,10 +24,28 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Typecheck
-        run: bun run typecheck
+      - name: Build web bundle
+        run: bun run build:web
 
-      - name: Lint
-        run: bun run lint
+      - name: Reject case-colliding tracked paths
+        run: |
+          duplicates="$(git ls-files | tr '[:upper:]' '[:lower:]' | sort | uniq -d)"
+          if [[ -n "$duplicates" ]]; then
+            printf 'case-colliding tracked paths:\n%s\n' "$duplicates"
+            exit 1
+          fi
 
+      - name: Check pull-request diff
+        if: github.event_name == 'pull_request'
+        run: git diff --check "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
+
+      - name: Check pushed diff
+        if: github.event_name == 'push'
+        run: git diff --check HEAD^ HEAD
+
+      - name: Scan pull-request commits for secrets
+        if: github.event_name == 'pull_request'
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
